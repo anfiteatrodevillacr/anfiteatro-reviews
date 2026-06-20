@@ -1,0 +1,32 @@
+{
+  "name": "anfiteatro-reviews",
+  "version": "2.0.0",
+  "description": "Centro de Resenas del Anfiteatro de Villa - standalone Next.js + Supabase",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1",
+    "deploy:preview": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -Preview",
+    "db:types": "supabase gen types typescript --project-id $env:SUPABASE_PROJECT_ID --schema public > lib/database.types.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "lucide-react": "^0.460.0",
+    "next": "14.2.18",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0"
+  }
+}
