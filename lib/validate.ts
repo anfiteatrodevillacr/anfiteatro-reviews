@@ -25,16 +25,12 @@ export function getClientIp(headers: Headers): string | null {
   );
 }
 
-export function jsonError(message: string, status = 400) {
-  return new Response(JSON.stringify({ ok: false, error: message }), {
-    status,
-    headers: { "Content-Type": "application/json" }
-  });
+import type { NextApiResponse } from "next";
+
+export function jsonError(res: NextApiResponse, message: string, status = 400) {
+  return res.status(status).json({ ok: false, error: message });
 }
 
-export function jsonOk(data: unknown, status = 200) {
-  return new Response(JSON.stringify({ ok: true, data }), {
-    status,
-    headers: { "Content-Type": "application/json" }
-  });
+export function jsonOk<T = unknown>(res: NextApiResponse, data: T, status = 200) {
+  return res.status(status).json({ ok: true, data });
 }
