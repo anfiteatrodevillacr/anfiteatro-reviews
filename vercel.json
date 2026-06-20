@@ -1,18 +1,12 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [
-    {
-      "path": "/api/cron/exportar-drive",
-      "schedule": "0 6 * * *"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/:path*",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
-      ]
-    }
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/review",      "destination": "/review.html" },
+    { "source": "/dashboard",   "destination": "/dashboard.html" },
+    { "source": "/restaurante", "destination": "/restaurante.html" },
+    { "source": "/evento",      "destination": "/evento.html" },
+    { "source": "/servicio",    "destination": "/servicio.html" },
+    { "source": "/menu",        "destination": "/menu.html" }
   ]
 }

@@ -1,28 +1,2 @@
-# Identidad: CUENTA CAWHI (trabajo)
-#
-# Este proyecto pertenece a la identidad Cawhi. Las reglas viven en
-# C:\Users\Picado\Cawhi-Dev\CLAUDE.md (carpeta padre). Resumen local:
-#
-# - GitHub: picado-cawhi/anfiteatro-reviews  (alias git@github.com-cawhi)
-# - Vercel: picado-s-projects / anfiteatro-reviews
-# - Supabase: org Cawhi (proyecto separado del ERP)
-# - Dominios: https://anfiteatro-reviews-eight.vercel.app
-#
-# REGLA: nunca usar credenciales personales en este repo.
-
 persona: cawhi
 cliente: anfiteatro
-subdominio: anfiteatro-reviews-eight
-url_prod: https://anfiteatro-reviews-eight.vercel.app
-
-# Stack
-framework: nextjs
-lenguaje: typescript
-db: supabase-postgres
-auth: anon-key + service-role (sin auth de usuario por ahora — reseñas son publicas)
-
-# Convenciones
-- Mantener paridad de copy ES/EN en todas las pantallas (armonizacion Codex 2026-06-15).
-- Parametro ?salonero=Nombre en /restaurante es sagrado: el codigo de postre se vincula al salonero.
-- Codigos de cortesia se generan en server-side (lib/codigos.ts), nunca en cliente.
-- RLS activado en TODAS las tablas: cliente anon solo puede INSERT resenas, no SELECT de las privadas.
