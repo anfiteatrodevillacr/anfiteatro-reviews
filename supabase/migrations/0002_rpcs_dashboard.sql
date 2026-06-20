@@ -58,9 +58,7 @@ begin
 end;
 $$;
 
--- Insertar una resena y devolver un codigo generado (si corresponde).
--- Esta funcion la llama el API route. Hace las dos cosas en una transaccion.
-
+-- Insertar resena y devolver codigo generado (si corresponde)
 create or replace function public.crear_resena_con_cortesia(
   p_canal              resena_canal,
   p_destino            resena_destino,
@@ -89,7 +87,6 @@ declare
   v_salonero_id    uuid;
   v_codigo_id      uuid;
 begin
-  -- resolver salonero_id si paso slug
   if p_salonero_slug is not null then
     select id into v_salonero_id from public.saloneros where slug = p_salonero_slug and activo = true;
   end if;
@@ -106,7 +103,6 @@ begin
   insert into public.eventos_metricas (tipo, canal, metadata)
   values ('resena_enviada', p_canal, jsonb_build_object('resena_id', v_resena_id, 'destino', p_destino));
 
-  -- generar codigo de cortesia si aplica
   if p_cortesia_tipo is not null and p_cortesia_codigo is not null then
     insert into public.codigos_cortesia (codigo, tipo, resena_id, salonero_id)
     values (p_cortesia_codigo, p_cortesia_tipo, v_resena_id, v_salonero_id)
@@ -118,6 +114,5 @@ begin
 end;
 $$;
 
--- Otorgar permiso de ejecucion a anon (la API lo llama con anon key)
 grant execute on function public.crear_resena_con_cortesia to anon;
 grant execute on function public.canjear_codigo             to anon;

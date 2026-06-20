@@ -2,10 +2,10 @@
 // Body: { canal, destino, estrellas, estrellas_servicio?, estrellas_comida?, resolvio?, comentario?, salonero_slug? }
 
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSupabase } from "../../../lib/supabase-server";
-import { generarCodigoCortesia } from "../../../lib/codigos";
-import { isValidEstrellas, sanitizeComment, getClientIp, jsonError, jsonOk, MAX_COMMENT_CHARS_EVENTO } from "../../../lib/validate";
-import type { ResenaCanal, ResenaDestino, CodigoTipo } from "../../../lib/database.types";
+import { getServerSupabase } from "../../lib/supabase-server";
+import { generarCodigoCortesia } from "../../lib/codigos";
+import { isValidEstrellas, sanitizeComment, getClientIp, jsonError, jsonOk, MAX_COMMENT_CHARS_EVENTO } from "../../lib/validate";
+import type { ResenaCanal, ResenaDestino, CodigoTipo } from "../../lib/database.types";
 
 interface Body {
   canal: ResenaCanal;
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const userAgent = (req.headers["user-agent"] ?? "").toString().slice(0, 500);
   const ip = getClientIp(req.headers as unknown as Headers);
 
-  const { data, error } = await sb.rpc("centro_resenas.crear_resena_con_cortesia" as never, {
+  const { data, error } = await sb.rpc("crear_resena_con_cortesia", {
     p_canal: body.canal,
     p_destino: body.destino,
     p_estrellas: body.estrellas,

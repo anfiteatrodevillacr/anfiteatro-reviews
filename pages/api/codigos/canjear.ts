@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (codigo.length < 8) return jsonError(res, "Codigo invalido", 400);
 
   const sb = getServerSupabase();
-  const { data, error } = await sb.rpc("centro_resenas.canjear_codigo" as never, {
+  const { data, error } = await sb.rpc("canjear_codigo", {
     p_codigo: codigo,
     p_canjeado_por: body.canjeado_por ?? null,
     p_notas: body.notas ?? null,
