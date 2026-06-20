@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const userAgent = (req.headers["user-agent"] ?? "").toString().slice(0, 500);
   const ip = getClientIp(req.headers as unknown as Headers);
 
-  const { data, error } = await sb.rpc("crear_resena_con_cortesia", {
+  const { data, error } = await sb.rpc("centro_resenas.crear_resena_con_cortesia" as never, {
     p_canal: body.canal,
     p_destino: body.destino,
     p_estrellas: body.estrellas,

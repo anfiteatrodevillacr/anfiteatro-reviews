@@ -1,4 +1,5 @@
-// Tipos generados manualmente (mirror de supabase/migrations/0001_schema_inicial.sql).
+// Tipos generados manualmente (mirror de supabase/migrations/0001_schema_inicial.sql + 0002).
+// Las tablas y funciones viven en el schema `centro_resenas` (aislado del ERP).
 // Para regenerar: `npm run db:types` (requiere supabase CLI).
 
 export type ResenaCanal = "cavernas" | "restaurante" | "evento" | "servicio";
@@ -45,28 +46,30 @@ export interface Salonero {
 }
 
 export interface Database {
-  public: {
+  // Schema `centro_resenas` (aislado del ERP `public`).
+  // NOTA: las funciones se llaman con prefijo `centro_resenas.nombre`
+  // (ver pages/api/resenas.ts y pages/api/codigos/canjear.ts).
+  [schema: string]: {
     Tables: {
       resenas:          { Row: Resena; Insert: Omit<Resena, "id" | "created_at"> & { id?: string; created_at?: string }; Update: Partial<Resena> };
       codigos_cortesia: { Row: CodigoCortesia; Insert: Omit<CodigoCortesia, "id" | "emitido_at"> & { id?: string; emitido_at?: string }; Update: Partial<CodigoCortesia> };
       saloneros:        { Row: Salonero; Insert: Omit<Salonero, "id" | "created_at"> & { id?: string; created_at?: string }; Update: Partial<Salonero> };
     };
+    Views: {
+      v_resumen_canal:    { Row: any };
+      v_resumen_salonero: { Row: any };
+    };
     Functions: {
-      crear_resena_con_cortesia: {
-        Args: {
-          p_canal: ResenaCanal; p_destino: ResenaDestino; p_estrellas: number;
-          p_estrellas_servicio?: number | null; p_estrellas_comida?: number | null;
-          p_resolvio?: boolean | null; p_comentario?: string | null;
-          p_salonero_slug?: string | null; p_idioma?: string;
-          p_user_agent?: string | null; p_ip_origen?: string | null;
-          p_cortesia_tipo?: CodigoTipo | null; p_cortesia_codigo?: string | null;
-        };
-        Returns: { resena_id: string; codigo_id: string | null; codigo: string | null }[];
+      [fn_name: string]: {
+        Args: Record<string, unknown>;
+        Returns: unknown;
       };
-      canjear_codigo: {
-        Args: { p_codigo: string; p_canjeado_por?: string | null; p_notas?: string | null };
-        Returns: { ok: boolean; mensaje: string; tipo: CodigoTipo | null; resena_id: string | null }[];
-      };
+    };
+    Enums: {
+      resena_canal: ResenaCanal;
+      resena_destino: ResenaDestino;
+      codigo_tipo: CodigoTipo;
+      codigo_estado: CodigoEstado;
     };
   };
 }
