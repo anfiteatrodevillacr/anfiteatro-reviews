@@ -741,6 +741,23 @@
 
     <!-- Lista de meseros -->
     <div id="meseros-feed" style="display:flex;flex-direction:column;gap:8px;">
+
+      <!-- QR General · Todos los restaurantes (sin tracking de mesero) -->
+      <div class="mesero-qr-general" style="background:linear-gradient(135deg, rgba(232,131,77,0.12) 0%, rgba(232,131,77,0.04) 100%);border:1.5px solid #E8834D;border-radius:12px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#E8834D;line-height:1.1;">QR General · Restaurantes</div>
+            <div style="font-size:11px;color:var(--muted);font-weight:300;margin-top:4px;line-height:1.4;">
+              Un solo QR para todos los restaurantes. Sin tracking por mesero.
+            </div>
+            <div style="font-size:10px;color:var(--muted);font-weight:300;margin-top:6px;font-family:monospace;letter-spacing:0.02em;opacity:0.75;word-break:break-all;" id="meseros-qr-general-url">—</div>
+          </div>
+          <button onclick="showQrGeneral()" style="background:#E8834D;color:var(--dark);border:none;border-radius:8px;padding:12px 16px;font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;flex-shrink:0;">
+            Ver QR
+          </button>
+        </div>
+      </div>
+
       <div id="meseros-empty" style="background:var(--dark-2);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center;font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;">
         Aún no hay meseros registrados.<br>
         <span style="opacity:0.55;">Ingresá el nombre de cada mesero para generar su link y QR.</span>
@@ -1710,6 +1727,28 @@
     document.body.style.overflow = 'hidden';
   }
 
+  // QR general de restaurantes (sin tracking de mesero).
+  // Mismo modal que showMeseroQR, sin nombre de mesero y con la URL general.
+  function showQrGeneral() {
+    var url = window.location.origin + '/restaurante';
+    _qrCurrentUrl = url;
+    document.getElementById('qr-modal-nombre').textContent = 'Todos los restaurantes (QR general)';
+    document.getElementById('qr-modal-url').textContent    = url;
+
+    var container = document.getElementById('qr-canvas-container');
+    container.innerHTML = '';
+    new QRCode(container, {
+      text: url,
+      width: 220, height: 220,
+      colorDark: '#0e0e0e',
+      colorLight: '#f5f0e8',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    document.getElementById('qr-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
   function closeQRModal() {
     document.getElementById('qr-modal').style.display = 'none';
     document.body.style.overflow = '';
@@ -1923,6 +1962,10 @@
   renderMeseros();
   renderCavernasQR();
   renderMeseroQRGrid();
+
+  // Setear URL del QR general de restaurantes en su card.
+  var qrGeneralEl = document.getElementById('meseros-qr-general-url');
+  if (qrGeneralEl) qrGeneralEl.textContent = window.location.origin + '/restaurante';
   renderRestaurant();
   renderEvento();
   renderServicio();
