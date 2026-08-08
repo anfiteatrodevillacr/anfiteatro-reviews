@@ -10,6 +10,24 @@
          * El sistema bloquea la entrega de nuevos codigos cuando el
            monto CANJEADO del mes >= limite mensual (para esa categoria)
 
+   ⚠️ LEER ESTO PRIMERO — PASO 0 (2026-08-07)
+     Este archivo ya NO usa `SpreadsheetApp.getActiveSpreadsheet()`: abre la
+     hoja por ID con el helper `getSS_()` (ver el bloque de SHEET_ID mas abajo).
+     `anfi_backend.gs` TODAVIA la usa y por eso el backend estuvo caido 42 dias.
+
+     Al pegar este archivo hay que hacer DOS cosas mas, o el arreglo queda a
+     medias y `action=stats` sigue fallando:
+
+       a) En `anfi_backend.gs`, reemplazar TODAS las apariciones de
+          `SpreadsheetApp.getActiveSpreadsheet()` por `getSS_()`.
+          (Buscar con Ctrl+H en el editor. `getSS_()` queda definido en este
+          archivo, asi que ambos comparten la misma hoja y el mismo error
+          legible si algo falla.)
+
+       b) Copiar `anfi_backend.gs` al repo. HOY NO EXISTE FUERA DEL EDITOR:
+          si se pierde esa cuenta, se pierde el backend entero. Este archivo
+          es solo un anexo, no el backend.
+
    COMO USARLO:
      1) Abri tu proyecto Apps Script (anfi_backend.gs).
      2) Pega TODO este archivo al final del codigo existente.
@@ -58,6 +76,47 @@ const SHEET_EVENTO      = 'Reseñas Eventos';
 const SHEET_CONFIG      = 'Config';
 const SHEET_CODIGOS     = 'Codigos';        // <- nombre de la pestana de codigos existente
 const TZ_CR             = 'America/Costa_Rica';
+
+/* ─────────────────────────────────────────────────────────────────────
+   LA HOJA SE ABRE POR ID, NO POR BINDING
+   ---------------------------------------------------------------------
+   INCIDENTE 2026-06-26 -> 2026-08-07 (42 dias caido, detectado tarde):
+   toda llamada que tocaba la hoja devolvia
+
+     {"status":"error","message":"TypeError: Cannot read properties of
+      null (reading 'getSheetByName')"}
+
+   ...porque `SpreadsheetApp.getActiveSpreadsheet()` devolvia null. Ese
+   metodo SOLO funciona si el script esta ligado a su hoja contenedora;
+   en un script standalone devuelve null SIEMPRE. El `doGet` base seguia
+   respondiendo `{"status":"ok"}`, asi que desde afuera el backend se
+   veia sano: lo unico roto era todo lo que tocaba datos.
+
+   `openById` no depende del binding. Mientras la cuenta que EJECUTA el
+   Web App tenga acceso a la hoja, funciona — este script sobrevive a que
+   lo copien, lo muevan de cuenta o lo vuelvan standalone.
+
+   OJO AL MIGRAR DE CUENTA: si algun dia la hoja se transfiere a otro
+   dueno, el ID NO cambia (el ID es del archivo, no del dueno), asi que
+   esta constante sigue sirviendo. Lo que si hay que revisar es que la
+   cuenta del "Ejecutar como" del deployment siga teniendo acceso.
+   ───────────────────────────────────────────────────────────────────── */
+const SHEET_ID = '1MMWZg4GNR0Y6C4lYSFZRsnuyKSQ9pqc0RB36uoPsRwc'; // "Anfiteatro de Villa — Reseñas 📊"
+
+function getSS_() {
+  try {
+    return SpreadsheetApp.openById(SHEET_ID);
+  } catch (err) {
+    // Convertimos el error cripto en uno accionable. El mensaje viaja al
+    // JSON de respuesta, asi que el health-check del workflow keepalive lo
+    // ve sin que nadie tenga que abrir el editor.
+    throw new Error(
+      'No se pudo abrir la hoja ' + SHEET_ID + '. Revisar que la cuenta del ' +
+      '"Ejecutar como" del deployment tenga acceso y que la hoja no este en ' +
+      'la papelera. Detalle: ' + err.message
+    );
+  }
+}
 
 // Mapa: source que reporta el frontend  ->  categoria de presupuesto
 const COURTESY_SOURCE_TO_CATEGORY = {
@@ -158,7 +217,7 @@ function handleSetCourtesyConfig(e) {
 }
 
 function getCourtesyConfig_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSS_();
   const sh = ss.getSheetByName(SHEET_CONFIG);
   const out = {};
   Object.keys(COURTESY_DEFAULTS).forEach(function(k) {
@@ -187,7 +246,7 @@ function handleCourtesySummary(e) {
 }
 
 function getCourtesySummary_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSS_();
   const sh = ss.getSheetByName(SHEET_CODIGOS);
   const result = {
     month: Utilities.formatDate(new Date(), TZ_CR, 'yyyy-MM'),
@@ -257,7 +316,7 @@ function checkCourtesyLimit_(source) {
    HELPERS GENERALES
    ───────────────────────────────────────────────────────────────────── */
 function ensureSheet_(name, headers) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSS_();
   let sh = ss.getSheetByName(name);
   if (!sh) {
     sh = ss.insertSheet(name);
@@ -269,7 +328,7 @@ function ensureSheet_(name, headers) {
 }
 
 function readReviewsSheet_(name, fieldNames, limit) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSS_();
   const sh = ss.getSheetByName(name);
   if (!sh) return [];
   const rows = sh.getDataRange().getValues();
@@ -414,7 +473,7 @@ function handleToggleMesero(e) {
    INTERNAL · Leer hoja Meseros → array de objetos
    ───────────────────────────────────────────────────────────────── */
 function getMeserosList_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSS_();
   const sh = ss.getSheetByName(SHEET_MESEROS);
   if (!sh) return [];
   const rows = sh.getDataRange().getValues();
