@@ -567,7 +567,7 @@
     <!-- Gráfica de tendencia -->
     <div class="chart-wrap">
       <div class="chart-title">Últimos 14 días · Visitas vs Clics</div>
-      <div id="chart-loading" style="text-align:center;font-size:11px;color:var(--muted);padding:30px 0;">Cargando datos del Sheet…</div>
+      <div id="chart-loading" style="text-align:center;font-size:11px;color:var(--muted);padding:30px 0;">Cargando datos…</div>
       <canvas id="trend-chart" height="160" style="display:none;"></canvas>
     </div>
   </div>
@@ -904,7 +904,7 @@
   <!-- FOOTER -->
   <div class="footer">
     <span class="gold">Nota:</span> Los contadores se guardan en este dispositivo.<br>
-    Conectar a Google Sheets para datos compartidos.
+    Los datos compartidos se sincronizan con la base de datos.
   </div>
 
 </div>
@@ -1920,7 +1920,7 @@
     if (state === 'live') {
       badge.style.borderColor = 'rgba(0,170,108,0.5)';
       badge.style.color = '#00AA6C';
-      badge.textContent = '● En Vivo · Google Sheets';
+      badge.textContent = '● En Vivo · Base de datos';
     } else if (state === 'loading') {
       badge.style.borderColor = 'rgba(201,168,76,0.3)';
       badge.style.color = '#C9A84C';
@@ -1928,7 +1928,7 @@
     } else {
       badge.style.borderColor = 'rgba(255,255,255,0.15)';
       badge.style.color = 'rgba(245,240,232,0.45)';
-      badge.textContent = '● Local · Sin conexión al Sheet';
+      badge.textContent = '● Local · Sin conexión';
     }
   }
 
