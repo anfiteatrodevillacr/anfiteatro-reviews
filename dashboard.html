@@ -934,7 +934,7 @@
 
 <script>
   // ── Pegá acá la URL de tu Apps Script Web App ──────────────────
-  var SCRIPT_URL = null; // migrado a Supabase (window.ANFI, ver /sb-backend.js)
+  var SCRIPT_URL = 'supabase'; // migrado: valor truthy solo para las guardas; las llamadas van por window.ANFI (ver /sb-backend.js)
   // ──────────────────────────────────────────────────────────────
 
   const KEYS = {
@@ -1849,11 +1849,7 @@
 
   /* ── FETCH DESDE APPS SCRIPT ────────────────────────────────── */
   function fetchFromSheet() {
-    if (!SCRIPT_URL || SCRIPT_URL === 'PEGAR_URL_AQUI') {
-      setSourceIndicator('local');
-      return;
-    }
-
+    // Backend siempre disponible vía Supabase (window.ANFI). Sin guarda de SCRIPT_URL.
     setSourceIndicator('loading');
 
     window.ANFI.stats()
