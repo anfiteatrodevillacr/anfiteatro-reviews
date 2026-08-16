@@ -433,6 +433,7 @@
       .feedback-textarea { min-height: 90px; }
     }
   </style>
+  <script src="/sb-backend.js"></script>
 </head>
 <body>
 
@@ -544,7 +545,7 @@
 
 <script>
   // ── URL del Apps Script Web App ──────────────────────────────
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzX_CJ18adp-bHzhXJfFrXr9MIG5WtYVsNSknn_dDUJnkz8WGOoriN7LuEDKUoLbeEQJg/exec';
+  var SCRIPT_URL = null; // migrado a Supabase (window.ANFI, ver /sb-backend.js)
   // ──────────────────────────────────────────────────────────────
 
   var ratings = { evento: 0, servicio: 0 };
@@ -570,24 +571,31 @@
 
   // Ping fire-and-forget (reseñas, no espera respuesta)
   function ping(action, params) {
-    if (!SCRIPT_URL || SCRIPT_URL === 'PEGAR_URL_AQUI') return;
-    var qs = Object.keys(params).map(function(k) {
-      return k + '=' + encodeURIComponent(params[k]);
-    }).join('&');
-    fetch(SCRIPT_URL + '?action=' + action + '&' + qs, { mode: 'no-cors' }).catch(function(){});
+    params = params || {};
+    if (action === 'restaurant_review') {
+      var s = parseInt(params.servicio,10)||0, c = parseInt(params.comida,10)||0;
+      window.ANFI.resena({ p_canal:'restaurante', p_destino:'publica', p_estrellas:(Math.round((s+c)/2)||s||c), p_estrellas_servicio:s, p_estrellas_comida:c, p_comentario:(params.comentario||null), p_salonero_slug:(params.salonero||null) }).catch(function(){});
+    } else if (action === 'event_review') {
+      var ev = parseInt(params.evento,10)||0, sv = parseInt(params.servicio,10)||0;
+      window.ANFI.resena({ p_canal:'evento', p_destino:'publica', p_estrellas:(Math.round((ev+sv)/2)||ev||sv), p_estrellas_servicio:sv, p_comentario:(params.comentario||null) }).catch(function(){});
+    } else if (action === 'service_review') {
+      var at = parseInt(params.atencion,10)||0;
+      var resolvio = (params.resolucion === 'si' || params.resolucion === 'yes' || params.resolucion === true);
+      window.ANFI.resena({ p_canal:'servicio', p_destino:'publica', p_estrellas:at, p_estrellas_servicio:at, p_resolvio:resolvio, p_comentario:(params.comentario||null) }).catch(function(){});
+    } else if (action === 'mesero_event') {
+      window.ANFI.evento('mesero_' + (params.type||''), 'evento', { mesero_id: params.mesero_id });
+    } else if (action === 'event') {
+      window.ANFI.evento(params.type || 'visit', 'evento', params);
+    } else {
+      window.ANFI.evento(action, 'evento', params);
+    }
   }
 
   // Solicitud de codigo CON respuesta: el backend chequea limite mensual
   function requestCode(code, source, onResult) {
-    if (!SCRIPT_URL || SCRIPT_URL === 'PEGAR_URL_AQUI') {
-      onResult({ status: 'ok', code: code });
-      return;
-    }
-    var url = SCRIPT_URL + '?action=save_code&code=' + encodeURIComponent(code) + '&source=' + encodeURIComponent(source);
-    fetch(url)
-      .then(function(r) { return r.json(); })
-      .then(function(data) { onResult(data || { status: 'ok', code: code }); })
-      .catch(function() { onResult({ status: 'ok', code: code }); });
+    window.ANFI.codigo(code, source)
+      .then(function(){ onResult({ status: 'ok', code: code }); })
+      .catch(function(){ onResult({ status: 'ok', code: code }); });
   }
 
   function generateCode() {

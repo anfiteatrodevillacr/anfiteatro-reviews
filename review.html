@@ -398,6 +398,7 @@
     .btn-continue.ta     { background: var(--ta-green); color: white; box-shadow: 0 4px 20px rgba(0,170,108,0.3); }
     .btn-continue-sub { font-size: 10px; font-weight: 400; opacity: 0.6; text-transform: none; letter-spacing: 0.02em; display: block; margin-top: 2px; }
   </style>
+  <script src="/sb-backend.js"></script>
 </head>
 <body>
 <div class="card">
@@ -512,26 +513,20 @@
 </div>
 
 <script>
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzX_CJ18adp-bHzhXJfFrXr9MIG5WtYVsNSknn_dDUJnkz8WGOoriN7LuEDKUoLbeEQJg/exec';
+  var SCRIPT_URL = null; // migrado a Supabase (window.ANFI, ver /sb-backend.js)
 
   var _reviewUrl = '';
   var _platform  = '';
 
   function ping(type, platform) {
-    if (!SCRIPT_URL) return;
-    fetch(SCRIPT_URL + '?action=event&type=' + type + (platform ? '&platform=' + platform : ''), { mode: 'no-cors' }).catch(function(){});
+    window.ANFI.evento(type, 'cavernas', platform ? { platform: platform } : {});
   }
 
   // Solicitud de codigo con respuesta: el backend chequea limite mensual
   function pingCode(code, source, onResult) {
-    if (!SCRIPT_URL) {
-      if (onResult) onResult({ status: 'ok', code: code });
-      return;
-    }
-    fetch(SCRIPT_URL + '?action=save_code&code=' + encodeURIComponent(code) + '&source=' + encodeURIComponent(source))
-      .then(function(r) { return r.json(); })
-      .then(function(data) { if (onResult) onResult(data || { status: 'ok', code: code }); })
-      .catch(function() { if (onResult) onResult({ status: 'ok', code: code }); });
+    window.ANFI.codigo(code, source)
+      .then(function(){ if (onResult) onResult({ status: 'ok', code: code }); })
+      .catch(function(){ if (onResult) onResult({ status: 'ok', code: code }); });
   }
 
   function generateCode() {
