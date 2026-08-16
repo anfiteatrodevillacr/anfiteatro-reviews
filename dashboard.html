@@ -368,6 +368,7 @@
       to   { opacity:1; transform:translateY(0); }
     }
   </style>
+  <script src="/sb-backend.js"></script>
 </head>
 <body>
 <div class="page">
@@ -933,7 +934,7 @@
 
 <script>
   // ── Pegá acá la URL de tu Apps Script Web App ──────────────────
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzX_CJ18adp-bHzhXJfFrXr9MIG5WtYVsNSknn_dDUJnkz8WGOoriN7LuEDKUoLbeEQJg/exec';
+  var SCRIPT_URL = null; // migrado a Supabase (window.ANFI, ver /sb-backend.js)
   // ──────────────────────────────────────────────────────────────
 
   const KEYS = {
@@ -1362,9 +1363,7 @@
 
     // Sincronizar al Apps Script si esta configurado
     if (SCRIPT_URL && SCRIPT_URL !== 'PEGAR_URL_AQUI') {
-      var qs = 'action=set_courtesy_config&config=' + encodeURIComponent(JSON.stringify(newCfg));
-      fetch(SCRIPT_URL + '?' + qs)
-        .then(function(r){ return r.json(); })
+      window.ANFI.setConfig(newCfg)
         .then(function(){ setConfigStatus('ok', '✓ Guardado · ' + new Date().toLocaleTimeString('es-CR')); })
         .catch(function(){ setConfigStatus('warn', '⚠ Guardado local pero no se pudo sincronizar al Sheet'); });
     } else {
@@ -1400,7 +1399,7 @@
     cfg[key] = { cost: cost, limit: limit };
     localStorage.setItem(COURTESY_KEYS.config, JSON.stringify(cfg));
     if (SCRIPT_URL && SCRIPT_URL !== 'PEGAR_URL_AQUI') {
-      fetch(SCRIPT_URL + '?action=set_courtesy_config&config=' + encodeURIComponent(JSON.stringify(cfg)))
+      window.ANFI.setConfig(cfg)
         .catch(function(){});
     }
     renderCourtesies();
@@ -1510,7 +1509,7 @@
     saveMeseros(list);
     if (SCRIPT_URL && SCRIPT_URL !== 'PEGAR_URL_AQUI') {
       list.forEach(function(m) {
-        fetch(SCRIPT_URL + '?action=register_mesero&id=' + encodeURIComponent(m.id) + '&nombre=' + encodeURIComponent(m.nombre))
+        window.ANFI.registrarMesero(m.id, m.nombre)
           .catch(function(){});
       });
     }
@@ -1691,7 +1690,7 @@
     _meseroStatus('ok','✓ ' + nombre + ' agregado.');
 
     if (SCRIPT_URL && SCRIPT_URL !== 'PEGAR_URL_AQUI') {
-      fetch(SCRIPT_URL + '?action=register_mesero&id=' + encodeURIComponent(id) + '&nombre=' + encodeURIComponent(nombre))
+      window.ANFI.registrarMesero(id, nombre)
         .then(function(r){ return r.json(); })
         .catch(function(){});
     }
@@ -1857,8 +1856,7 @@
 
     setSourceIndicator('loading');
 
-    fetch(SCRIPT_URL + '?action=stats')
-      .then(function(res) { return res.json(); })
+    window.ANFI.stats()
       .then(function(data) {
         // Sincronizar localStorage con los datos del sheet
         localStorage.setItem(KEYS.gateYes,  data.gate_yes  || 0);
@@ -1995,8 +1993,7 @@
 
     showRedeemResult('loading', '⏳ Validando código…');
 
-    fetch(SCRIPT_URL + '?action=redeem_code&code=' + encodeURIComponent(code))
-      .then(r => r.json())
+    window.ANFI.canjear(code)
       .then(data => {
         if (data.status === 'ok') {
           // Etiqueta clara del tipo de codigo segun la fuente o prefijo
@@ -2062,8 +2059,7 @@
 
   function fetchAnalytics() {
     if (!SCRIPT_URL || SCRIPT_URL === 'PEGAR_URL_AQUI') return;
-    fetch(SCRIPT_URL + '?action=analytics')
-      .then(function(r) { return r.json(); })
+    window.ANFI.analytics()
       .then(function(data) {
         analyticsData = data;
         renderAnalyticsPeriod(currentPeriod);

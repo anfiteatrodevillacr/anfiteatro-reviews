@@ -104,3 +104,56 @@ grant execute on function public.canjear_codigo(text,text,text) to anon, authent
 
 -- keepalive_ping() ya existe de la v2 (SECURITY DEFINER, anon EXECUTE). Toca la
 -- tabla keepalive → cuenta como actividad para que el Free plan no pause.
+
+-- ══════════════════════════════════════════════════════════════════════════
+-- DASHBOARD (panel admin) — funciones de lectura + config + meseros
+-- ══════════════════════════════════════════════════════════════════════════
+
+-- Tabla de config de cortesías (costos/límites por categoría)
+create table if not exists public.config_cortesias (
+  categoria text primary key, cost numeric not null default 0, lim numeric, actualizado timestamptz default now()
+);
+alter table public.config_cortesias enable row level security;
+drop policy if exists cfg_anon_read on public.config_cortesias;
+create policy cfg_anon_read on public.config_cortesias for select to anon using (true);
+insert into public.config_cortesias(categoria,cost,lim) values
+  ('anfi15',6,null),('postre',3,null),('tour',15,null) on conflict do nothing;
+
+-- codigos_cortesia.emitido_at con default (para agregaciones del mes)
+alter table public.codigos_cortesia alter column emitido_at set default now();
+
+-- registrar/actualizar mesero (salonero). FIX use_column (choque "slug").
+create or replace function public.registrar_salonero(p_slug text, p_nombre text)
+returns table(id uuid, slug text, nombre text) language plpgsql security definer set search_path=public as $f$
+#variable_conflict use_column
+begin
+  return query insert into public.saloneros(slug,nombre,activo)
+    values (lower(trim(p_slug)), trim(p_nombre), true)
+    on conflict (slug) do update set nombre=excluded.nombre
+    returning saloneros.id, saloneros.slug, saloneros.nombre;
+end $f$;
+revoke all on function public.registrar_salonero(text,text) from public;
+grant execute on function public.registrar_salonero(text,text) to anon, authenticated;
+
+-- guardar config de cortesías
+create or replace function public.set_config_cortesias(p_config jsonb)
+returns jsonb language plpgsql security definer set search_path=public as $f$
+declare k text;
+begin
+  for k in select jsonb_object_keys(p_config) loop
+    insert into public.config_cortesias(categoria,cost,lim,actualizado)
+    values (k, coalesce((p_config->k->>'cost')::numeric,0), nullif(p_config->k->>'limit','')::numeric, now())
+    on conflict (categoria) do update set cost=excluded.cost, lim=excluded.lim, actualizado=now();
+  end loop;
+  return (select jsonb_object_agg(categoria, jsonb_build_object('cost',cost,'limit',lim)) from public.config_cortesias);
+end $f$;
+revoke all on function public.set_config_cortesias(jsonb) from public;
+grant execute on function public.set_config_cortesias(jsonb) to anon, authenticated;
+
+-- dashboard_stats(): MISMO formato que getStats del Apps Script viejo.
+-- Definición aplicada en la DB (ver historial). Devuelve jsonb con gate_yes/gate_no/
+-- visits/google/ta/last_event/feedback[]/restaurante[]/evento[]/servicio[]/
+-- courtesy_config/courtesy_summary/meseros[]. grant a anon, authenticated.
+
+-- dashboard_analytics(): today/week/month + daily[14] de eventos. grant a anon, authenticated.
+-- (Cuerpos completos de ambas en la DB; son de lectura/agregación pura.)

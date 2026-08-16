@@ -42,9 +42,27 @@
       return rpc('guardar_codigo', { p_codigo: code, p_tipo: tipoBySource(source) });
     },
 
-    /* Canje de código (para el dashboard/caja). */
+    /* Canje de código (dashboard/caja). Normaliza al formato viejo {status, source}. */
     canjear: function (code, por) {
-      return rpc('canjear_codigo', { p_codigo: code, p_canjeado_por: por || null });
+      return rpc('canjear_codigo', { p_codigo: code, p_canjeado_por: por || null })
+        .then(function (rows) {
+          var r = (rows && rows[0]) || {};
+          return { status: r.ok ? 'ok' : 'error', source: r.tipo, tipo: r.tipo, mensaje: r.mensaje, msg: r.mensaje };
+        });
+    },
+
+    /* Dashboard: stats en el MISMO formato que el getStats viejo. */
+    stats: function () { return rpc('dashboard_stats', {}); },
+
+    /* Dashboard: analytics por período (today/week/month/daily). */
+    analytics: function () { return rpc('dashboard_analytics', {}); },
+
+    /* Dashboard: guardar config de cortesías. */
+    setConfig: function (cfg) { return rpc('set_config_cortesias', { p_config: cfg }); },
+
+    /* Dashboard: registrar/actualizar mesero (salonero). */
+    registrarMesero: function (id, nombre) {
+      return rpc('registrar_salonero', { p_slug: id, p_nombre: nombre });
     }
   };
 })();
