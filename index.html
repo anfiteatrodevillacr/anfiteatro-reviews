@@ -430,6 +430,7 @@
       .feedback-textarea { min-height: 96px; }
     }
   </style>
+  <script src="/sb-backend.js"></script>
 </head>
 <body>
 
@@ -551,25 +552,21 @@
 
 <script>
   // ── Pegá acá la URL de tu Apps Script Web App ──────────────────
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzX_CJ18adp-bHzhXJfFrXr9MIG5WtYVsNSknn_dDUJnkz8WGOoriN7LuEDKUoLbeEQJg/exec';
+  var SCRIPT_URL = null; // migrado a Supabase (window.ANFI, ver /sb-backend.js)
   // ──────────────────────────────────────────────────────────────
 
   let selectedStars = 0;
 
   /* Envía evento al sheet (fire-and-forget, no bloquea la UI) */
   function ping(type, extra) {
-    if (!SCRIPT_URL || SCRIPT_URL === 'PEGAR_URL_AQUI') return;
-    var url = SCRIPT_URL + '?action=event&type=' + type + (extra || '');
-    fetch(url, { mode: 'no-cors' }).catch(function() {});
+    var meta = {};
+    if (extra && String(extra).indexOf('platform=') > -1) meta.platform = String(extra).split('platform=')[1];
+    window.ANFI.evento(type, 'cavernas', meta);
   }
 
   /* Envía feedback privado al sheet */
   function sendFeedback(stars, comment) {
-    if (!SCRIPT_URL || SCRIPT_URL === 'PEGAR_URL_AQUI') return;
-    var url = SCRIPT_URL
-      + '?action=feedback&stars=' + stars
-      + '&comment=' + encodeURIComponent(comment);
-    fetch(url, { mode: 'no-cors' }).catch(function() {});
+    window.ANFI.resena({ p_canal: 'cavernas', p_destino: 'privada', p_estrellas: (parseInt(stars,10)||0), p_comentario: comment }).catch(function(){});
   }
 
   /* ── SÍ ── */
@@ -662,14 +659,9 @@
   // Solicitud de codigo con respuesta: backend chequea limite mensual.
   // onResult(data) recibe { status:'ok', code } o { status:'limit_reached' }.
   function pingCode(code, source, onResult) {
-    if (!SCRIPT_URL || SCRIPT_URL === 'PEGAR_URL_AQUI') {
-      if (onResult) onResult({ status: 'ok', code: code });
-      return;
-    }
-    fetch(SCRIPT_URL + '?action=save_code&code=' + encodeURIComponent(code) + '&source=' + encodeURIComponent(source))
-      .then(function(r) { return r.json(); })
-      .then(function(data) { if (onResult) onResult(data || { status: 'ok', code: code }); })
-      .catch(function() { if (onResult) onResult({ status: 'ok', code: code }); });
+    window.ANFI.codigo(code, source)
+      .then(function(){ if (onResult) onResult({ status: 'ok', code: code }); })
+      .catch(function(){ if (onResult) onResult({ status: 'ok', code: code }); });
   }
 
   function copyThanksCode() {
