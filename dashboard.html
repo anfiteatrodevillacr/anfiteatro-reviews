@@ -1489,7 +1489,36 @@
 
   /* ── MESEROS · LA FONTANA ──────────────────────────────────── */
   var MESEROS_KEY     = 'anfi_meseros';
-  var BASE_RESTO_URL  = window.location.origin + '/restaurante?mesero=';
+  /* ─────────────────────────────────────────────────────────────────────
+     ORIGEN CANONICO PARA TODO LO QUE SE IMPRIME
+     ---------------------------------------------------------------------
+     Los QR se armaban con `window.location.origin`. Eso significa que un QR
+     impreso desde el dashboard queda amarrado PARA SIEMPRE al host donde
+     estaba abierto el dashboard en ese momento.
+
+     Y hay mas de un host: ademas del bueno existen
+     `anfiteatro-reviews-eight.vercel.app` y `anfiteatro-reviews.vercel.app`,
+     dos deployments viejos que siguen vivos y sirven la version anterior
+     (la que hablaba con Apps Script, caido desde el 26-jun). Un QR generado
+     desde ahi manda al cliente a la version muerta: llena la encuesta, ve la
+     pantalla de gracias, y no se guarda nada. En silencio.
+
+     Un QR es un artefacto DURABLE: se imprime, se pega en una mesa y vive
+     meses. No puede depender de en que pestana estaba abierto el dashboard.
+     Por eso se fija al origen canonico.
+
+     En localhost se respeta el origen actual para poder probar el flujo
+     completo; en CUALQUIER host desplegado se usa el canonico, incluso si el
+     dashboard se abrio por accidente en uno de los viejos.
+     ───────────────────────────────────────────────────────────────────── */
+  var CANONICAL_ORIGIN = 'https://anfiteatro-reviews-rho.vercel.app';
+
+  function origenImprimible() {
+    var h = window.location.hostname;
+    return (h === 'localhost' || h === '127.0.0.1') ? window.location.origin : CANONICAL_ORIGIN;
+  }
+
+  var BASE_RESTO_URL  = origenImprimible() + '/restaurante?mesero=';
   var _qrCurrentUrl   = '';
 
   function readMeseros() {
@@ -1498,7 +1527,7 @@
   }
   function saveMeseros(list) { localStorage.setItem(MESEROS_KEY, JSON.stringify(list)); }
 
-  var BASE_CAVE_URL = window.location.origin + '/';
+  var BASE_CAVE_URL = origenImprimible() + '/';
 
   function initDefaultMeseros() {
     if (readMeseros().length > 0) return;
@@ -1729,7 +1758,7 @@
   // QR general de restaurantes (sin tracking de mesero).
   // Mismo modal que showMeseroQR, sin nombre de mesero y con la URL general.
   function showQrGeneral() {
-    var url = window.location.origin + '/restaurante';
+    var url = origenImprimible() + '/restaurante';
     _qrCurrentUrl = url;
     document.getElementById('qr-modal-nombre').textContent = 'Todos los restaurantes (QR general)';
     document.getElementById('qr-modal-url').textContent    = url;
@@ -1959,7 +1988,7 @@
 
   // Setear URL del QR general de restaurantes en su card.
   var qrGeneralEl = document.getElementById('meseros-qr-general-url');
-  if (qrGeneralEl) qrGeneralEl.textContent = window.location.origin + '/restaurante';
+  if (qrGeneralEl) qrGeneralEl.textContent = origenImprimible() + '/restaurante';
   renderRestaurant();
   renderEvento();
   renderServicio();
