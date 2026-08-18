@@ -692,6 +692,42 @@
       </div>
     </div>
 
+
+    <!-- QR &#127917; Eventos privados -->
+    <div style="background:var(--dark-2);border:1px solid var(--border);border-left:3px solid #C9A84C;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#C9A84C;margin-bottom:10px;">&#127917; Eventos privados</div>
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <div style="background:#f5f0e8;border-radius:10px;padding:8px;flex-shrink:0;">
+          <div id="evento-qr-container" style="line-height:0;"></div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;color:var(--cream);font-weight:700;margin-bottom:6px;line-height:1.4;">Encuesta de satisfaccion<br><span style="font-weight:300;color:var(--muted);">Experiencia y servicio del evento</span></div>
+          <div id="evento-qr-url" style="font-size:10px;color:var(--muted);word-break:break-all;line-height:1.5;margin-bottom:10px;font-family:Lato,monospace;"></div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="copiarLinkPantalla('evento',this)" style="font-size:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 12px;color:var(--cream);font-family:Lato,sans-serif;cursor:pointer;">&#128203; Copiar</button>
+            <button onclick="downloadQR('evento-qr-container','Eventos',this)" style="font-size:10px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:6px;padding:6px 12px;color:#C9A84C;font-family:Lato,sans-serif;cursor:pointer;">&#11015; Descargar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR &#128172; Atencion al cliente -->
+    <div style="background:var(--dark-2);border:1px solid var(--border);border-left:3px solid #7BA05B;border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#7BA05B;margin-bottom:10px;">&#128172; Atencion al cliente</div>
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <div style="background:#f5f0e8;border-radius:10px;padding:8px;flex-shrink:0;">
+          <div id="servicio-qr-container" style="line-height:0;"></div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;color:var(--cream);font-weight:700;margin-bottom:6px;line-height:1.4;">Encuesta de satisfaccion<br><span style="font-weight:300;color:var(--muted);">Correo y WhatsApp &middot; sin codigo</span></div>
+          <div id="servicio-qr-url" style="font-size:10px;color:var(--muted);word-break:break-all;line-height:1.5;margin-bottom:10px;font-family:Lato,monospace;"></div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="copiarLinkPantalla('servicio',this)" style="font-size:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 12px;color:var(--cream);font-family:Lato,sans-serif;cursor:pointer;">&#128203; Copiar</button>
+            <button onclick="downloadQR('servicio-qr-container','Atencion-al-Cliente',this)" style="font-size:10px;background:rgba(123,160,91,0.1);border:1px solid rgba(123,160,91,0.3);border-radius:6px;padding:6px 12px;color:#7BA05B;font-family:Lato,sans-serif;cursor:pointer;">&#11015; Descargar</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- QR Grid Meseros -->
     <div style="background:var(--dark-2);border:1px solid var(--border);border-left:3px solid #E8834D;border-radius:10px;padding:14px;">
       <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#E8834D;margin-bottom:10px;">👨‍🍳 QRs · Meseros Restaurante</div>
@@ -1529,6 +1565,58 @@
 
   var BASE_CAVE_URL = origenImprimible() + '/';
 
+  /* Pantallas con QR propio para imprimir. La de Cavernas y las de meseros ya
+     tenian el suyo; faltaban evento y servicio, que se venian imprimiendo desde
+     archivos sueltos. Ahora las cuatro se regeneran solas desde el origen
+     canonico: si manana cambia (dominio propio), no hay que reimprimir a mano
+     ni pedirle el PNG a nadie — se baja de aca. */
+  var PANTALLAS_QR = [
+    { id: 'evento',   ruta: '/evento'   },
+    { id: 'servicio', ruta: '/servicio' }
+  ];
+
+  function urlPantalla(id) {
+    for (var i = 0; i < PANTALLAS_QR.length; i++) {
+      if (PANTALLAS_QR[i].id === id) return origenImprimible() + PANTALLAS_QR[i].ruta;
+    }
+    return origenImprimible() + '/';
+  }
+
+  function copiarLinkPantalla(id, btn) {
+    var url = urlPantalla(id);
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(url).then(function () {
+      var orig = btn.textContent;
+      btn.textContent = '✓ Copiado';
+      setTimeout(function () { btn.textContent = orig; }, 1800);
+    });
+  }
+
+  function renderPantallasQR(_retry) {
+    // El script de QR se carga por CDN: puede no estar listo todavia. Mismo
+    // reintento acotado que usa renderCavernasQR.
+    if (typeof QRCode === 'undefined') {
+      if ((_retry || 0) < 10) setTimeout(function () { renderPantallasQR((_retry || 0) + 1); }, 300);
+      return;
+    }
+    PANTALLAS_QR.forEach(function (p) {
+      var url = origenImprimible() + p.ruta;
+      var urlEl = document.getElementById(p.id + '-qr-url');
+      if (urlEl) urlEl.textContent = url;
+      var cont = document.getElementById(p.id + '-qr-container');
+      if (!cont) return;
+      cont.innerHTML = '';
+      new QRCode(cont, {
+        text: url,
+        width: 160, height: 160,
+        colorDark: '#0e0e0e',
+        colorLight: '#f5f0e8',
+        // Nivel H: un QR pegado en una mesa se ensucia y se raya; aguanta ~30% dañado.
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    });
+  }
+
   function initDefaultMeseros() {
     if (readMeseros().length > 0) return;
     var defaults = ['Andrea','Michelle','Reina','Edgar','Heidy','Roy','Josh'];
@@ -1984,6 +2072,7 @@
   renderFeedback();
   renderMeseros();
   renderCavernasQR();
+  renderPantallasQR();
   renderMeseroQRGrid();
 
   // Setear URL del QR general de restaurantes en su card.
