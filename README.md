@@ -5,9 +5,9 @@ Reescrito como proyecto Next.js 14 standalone con Supabase.
 
 ## Produccion
 
-- URL cliente: https://anfiteatro-reviews-eight.vercel.app (Vercel)
-- URL equipo (dashboard): https://anfiteatro-reviews-eight.vercel.app/dashboard
-- URL indice interno: https://anfiteatro-reviews-eight.vercel.app/menu
+- URL cliente: https://anfiteatro-reviews-rho.vercel.app (Vercel)
+- URL equipo (dashboard): https://anfiteatro-reviews-rho.vercel.app/dashboard
+- URL indice interno: https://anfiteatro-reviews-rho.vercel.app/menu
 
 ## Pantallas
 
